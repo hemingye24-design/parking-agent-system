@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("创建代理商失败:", error);
     return NextResponse.json(
-      { error: "创建代理商失败" },
+      { error: "创建代理商失败: " + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
