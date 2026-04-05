@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String   @unique
+  referralCode  String   @unique
+  createdAt     DateTime @default(now())
+  leads         Lead[]
+}
+
+enum LeadStatus {
+  PENDING
+  CONTACTED
+  PROPOSAL
+  SIGNED
+  FAILED
+}
+
+model Lead {
+  id            String    @id @default(uuid())
+  customerName  String
+  customerPhone String
+  projectTypes  String    @default("")
+  projectLocation String  @default("")
+  parkingGap    Int
+  agentId       String
+  agent         Agent     @relation(fields: [agentId], references: [id])
+  status        LeadStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+}
