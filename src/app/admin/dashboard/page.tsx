@@ -9,6 +9,8 @@ interface Agent {
   name: string;
   phone: string;
   referralCode: string;
+  accessToken: string;
+  createdAt: string;
   _count: {
     leads: number;
   };
@@ -18,7 +20,8 @@ interface Lead {
   id: string;
   customerName: string;
   customerPhone: string;
-  projectName: string;
+  projectTypes: string;
+  projectLocation: string;
   parkingGap: number;
   status: LeadStatus;
   createdAt: string;
@@ -57,6 +60,7 @@ export default function AdminDashboardPage() {
     phone: "",
     referralCode: "",
   });
+  const [copiedId, setCopiedId] = useState<string>("");
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("admin");
@@ -64,7 +68,6 @@ export default function AdminDashboardPage() {
       router.push("/admin");
       return;
     }
-
     fetchData();
   }, [router]);
 
@@ -90,7 +93,6 @@ export default function AdminDashboardPage() {
 
   const handleAddAgent = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       const response = await fetch("/api/admin/agents", {
         method: "POST",
@@ -99,10 +101,7 @@ export default function AdminDashboardPage() {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "创建失败");
-      }
+      if (!response.ok) throw new Error(data.error || "创建失败");
 
       setShowAddAgent(false);
       setNewAgent({ name: "", phone: "", referralCode: "" });
@@ -115,18 +114,10 @@ export default function AdminDashboardPage() {
 
   const handleDeleteAgent = async (id: string) => {
     if (!confirm("确定要删除该代理商吗？")) return;
-
     try {
-      const response = await fetch(`/api/admin/agents?id=${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("删除失败");
-      }
-
+      const response = await fetch(`/api/admin/agents?id=${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("删除失败");
       fetchData();
-      alert("删除成功！");
     } catch (err) {
       alert(err instanceof Error ? err.message : "删除失败");
     }
@@ -139,16 +130,25 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: leadId, status }),
       });
-
-      if (!response.ok) {
-        throw new Error("更新失败");
-      }
-
+      if (!response.ok) throw new Error("更新失败");
       fetchData();
-      alert("状态更新成功！");
     } catch (err) {
       alert(err instanceof Error ? err.message : "更新失败");
     }
+  };
+
+  const copyAgentDashboardLink = (agent: Agent) => {
+    const link = `${window.location.origin}/agent/dashboard?token=${agent.accessToken}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(agent.id);
+    setTimeout(() => setCopiedId(""), 2000);
+  };
+
+  const copyAgentInviteLink = (agent: Agent) => {
+    const link = `${window.location.origin}/invite/${agent.referralCode}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(`invite-${agent.id}`);
+    setTimeout(() => setCopiedId(""), 2000);
   };
 
   const handleLogout = () => {
@@ -164,143 +164,146 @@ export default function AdminDashboardPage() {
     );
   }
 
+  const totalLeads = leads.length;
+  const signedLeads = leads.filter((l) => l.status === "SIGNED").length;
+  const pendingLeads = leads.filter((l) => l.status === "PENDING").length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-6 px-4">
+      <div className="max-w-5xl mx-auto">
         {/* 头部 */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg p-5 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                总部管理员后台
-              </h1>
-              <p className="text-gray-600 text-sm">
-                厦门泊库智能科技有限公司
-              </p>
+              <h1 className="text-xl font-bold text-gray-900">管理后台</h1>
+              <p className="text-gray-500 text-xs mt-1">厦门泊库智能科技有限公司</p>
             </div>
             <button
               onClick={handleLogout}
-              className="px-6 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="text-sm text-gray-400 hover:text-gray-600"
             >
-              退出登录
+              退出
             </button>
+          </div>
+
+          {/* 统计 */}
+          <div className="grid grid-cols-4 gap-3 mt-4">
+            <div className="bg-purple-50 rounded-xl p-3 text-center">
+              <div className="text-xl font-bold text-purple-600">{agents.length}</div>
+              <div className="text-xs text-purple-500 mt-1">代理人</div>
+            </div>
+            <div className="bg-blue-50 rounded-xl p-3 text-center">
+              <div className="text-xl font-bold text-blue-600">{totalLeads}</div>
+              <div className="text-xs text-blue-500 mt-1">总线索</div>
+            </div>
+            <div className="bg-yellow-50 rounded-xl p-3 text-center">
+              <div className="text-xl font-bold text-yellow-600">{pendingLeads}</div>
+              <div className="text-xs text-yellow-500 mt-1">待跟进</div>
+            </div>
+            <div className="bg-green-50 rounded-xl p-3 text-center">
+              <div className="text-xl font-bold text-green-600">{signedLeads}</div>
+              <div className="text-xs text-green-500 mt-1">已签约</div>
+            </div>
           </div>
         </div>
 
-        {/* 标签页切换 */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
+        {/* 标签页 */}
+        <div className="bg-white rounded-2xl shadow-lg mb-4 overflow-hidden">
           <div className="flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab("agents")}
-              className={`flex-1 px-6 py-4 font-medium transition-colors ${
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === "agents"
                   ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              代理商管理 ({agents.length})
+              代理人 ({agents.length})
             </button>
             <button
               onClick={() => setActiveTab("leads")}
-              className={`flex-1 px-6 py-4 font-medium transition-colors ${
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === "leads"
                   ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              线索总览 ({leads.length})
+              线索 ({leads.length})
             </button>
           </div>
 
           {/* 代理商管理 */}
           {activeTab === "agents" && (
-            <div className="p-6">
+            <div className="p-5">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  代理商列表
-                </h2>
+                <h2 className="text-base font-semibold text-gray-900">代理人列表</h2>
                 <button
                   onClick={() => setShowAddAgent(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  添加代理商
+                  + 添加
                 </button>
               </div>
 
               {agents.length === 0 ? (
-                <div className="text-center py-12 text-gray-600">
-                  暂无代理商
-                </div>
+                <div className="text-center py-8 text-gray-500 text-sm">暂无代理人</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          姓名
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          手机号
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          推广码
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          线索数量
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          创建时间
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          操作
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {agents.map((agent) => (
-                        <tr key={agent.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-900">
-                            {agent.name}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {agent.phone}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className="font-mono text-blue-600">
+                <div className="space-y-3">
+                  {agents.map((agent) => (
+                    <div key={agent.id} className="border border-gray-100 rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-900">{agent.name}</span>
+                            <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                               {agent.referralCode}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {agent._count.leads}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {new Date(agent.createdAt).toLocaleString("zh-CN")}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <button
-                              onClick={() => handleDeleteAgent(agent.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              删除
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {agent.phone}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            {agent._count.leads} 条线索
+                          </span>
+                          <button
+                            onClick={() => handleDeleteAgent(agent.id)}
+                            className="text-xs text-red-400 hover:text-red-600"
+                          >
+                            删除
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 快捷操作：复制链接 */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => copyAgentDashboardLink(agent)}
+                          className={`flex-1 text-xs py-2 rounded-lg font-medium transition-colors ${
+                            copiedId === agent.id
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                        >
+                          {copiedId === agent.id ? "已复制 ✓" : "复制看板链接"}
+                        </button>
+                        <button
+                          onClick={() => copyAgentInviteLink(agent)}
+                          className={`flex-1 text-xs py-2 rounded-lg font-medium transition-colors ${
+                            copiedId === `invite-${agent.id}`
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                        >
+                          {copiedId === `invite-${agent.id}` ? "已复制 ✓" : "复制推广链接"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        将「看板链接」发给代理人，他在微信中打开即可免登录查看线索
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -308,69 +311,37 @@ export default function AdminDashboardPage() {
 
           {/* 线索总览 */}
           {activeTab === "leads" && (
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                所有线索
-              </h2>
+            <div className="p-5">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">所有线索</h2>
 
               {leads.length === 0 ? (
-                <div className="text-center py-12 text-gray-600">
-                  暂无线索
-                </div>
+                <div className="text-center py-8 text-gray-500 text-sm">暂无线索</div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {leads.map((lead) => (
-                    <div
-                      key={lead.id}
-                      className="border border-gray-200 rounded-xl p-4"
-                    >
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-gray-900">
-                              {lead.customerName}
-                            </h3>
-                            <span className="text-sm text-gray-500">
-                              {lead.customerPhone}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-600 space-y-1">
-                        <p>项目类型：{lead.projectTypes}</p>
-                        <p>项目地点：{lead.projectLocation}</p>
-                        <p>车位缺口：{lead.parkingGap} 个</p>
-                        <p className="text-xs text-gray-400">
-                          推荐代理：{lead.agent.name}（{lead.agent.referralCode}）
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          提交时间：{new Date(lead.createdAt).toLocaleString("zh-CN")}
-                        </p>
+                    <div key={lead.id} className="border border-gray-100 rounded-xl p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <span className="font-semibold text-gray-900 text-sm">{lead.customerName}</span>
+                          <span className="text-xs text-gray-400 ml-2">{lead.customerPhone}</span>
+                        </div>
+                        <select
+                          value={lead.status}
+                          onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value as LeadStatus)}
+                          className={`text-xs px-2 py-1 rounded-lg border-0 font-medium ${statusColors[lead.status]}`}
+                        >
+                          {Object.entries(statusLabels).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
                       </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <select
-                            value={lead.status}
-                            onChange={(e) =>
-                              handleUpdateLeadStatus(
-                                lead.id,
-                                e.target.value as LeadStatus
-                              )
-                            }
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            {Object.entries(statusLabels).map(([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                              statusColors[lead.status]
-                            }`}
-                          >
-                            {statusLabels[lead.status]}
-                          </span>
-                        </div>
+                      <div className="text-xs text-gray-500 space-y-0.5">
+                        <p>项目：{lead.projectTypes} · {lead.projectLocation}</p>
+                        <p>车位需求：{lead.parkingGap} 个</p>
+                        <p className="text-gray-400">
+                          代理：{lead.agent.name}（{lead.agent.referralCode}）·{" "}
+                          {new Date(lead.createdAt).toLocaleString("zh-CN")}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -382,73 +353,59 @@ export default function AdminDashboardPage() {
 
         {/* 添加代理商弹窗 */}
         {showAddAgent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                添加新代理商
-              </h2>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">添加代理人</h2>
 
-              <form onSubmit={handleAddAgent} className="space-y-4">
+              <form onSubmit={handleAddAgent} className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    姓名
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
                   <input
                     type="text"
                     required
                     value={newAgent.name}
-                    onChange={(e) =>
-                      setNewAgent({ ...newAgent, name: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="请输入姓名"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    手机号
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">手机号 *</label>
                   <input
                     type="tel"
                     required
                     pattern="[0-9]{11}"
                     value={newAgent.phone}
-                    onChange={(e) =>
-                      setNewAgent({ ...newAgent, phone: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="请输入 11 位手机号"
+                    onChange={(e) => setNewAgent({ ...newAgent, phone: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="11位手机号"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    推广码
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">推广码 *</label>
                   <input
                     type="text"
                     required
                     value={newAgent.referralCode}
-                    onChange={(e) =>
-                      setNewAgent({ ...newAgent, referralCode: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="例如：A1001"
+                    onChange={(e) => setNewAgent({ ...newAgent, referralCode: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="如 A1001"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowAddAgent(false)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
                     取消
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700"
                   >
                     创建
                   </button>

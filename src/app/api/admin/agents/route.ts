@@ -5,7 +5,13 @@ export async function GET() {
   try {
     const agents = await prisma.agent.findMany({
       orderBy: { createdAt: "desc" },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        referralCode: true,
+        accessToken: true,
+        createdAt: true,
         _count: {
           select: { leads: true },
         },

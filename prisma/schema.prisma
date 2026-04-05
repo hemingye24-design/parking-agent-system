@@ -15,6 +15,7 @@ model Agent {
   name          String
   phone         String   @unique
   referralCode  String   @unique
+  accessToken   String   @unique @default(uuid())
   createdAt     DateTime @default(now())
   leads         Lead[]
 }
