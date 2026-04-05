@@ -48,7 +48,8 @@ export default function InvitePage() {
       setFormData({
         customerName: "",
         customerPhone: "",
-        projectName: "",
+        projectTypes: [],
+        projectLocation: "",
         parkingGap: "",
       });
     } catch (err) {
