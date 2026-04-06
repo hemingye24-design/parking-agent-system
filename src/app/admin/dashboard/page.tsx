@@ -118,10 +118,11 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteAgent = async (id: string) => {
-    if (!confirm("确定要删除该合伙人吗？")) return;
+    if (!confirm("确定要删除该合伙人吗？该合伙人下的所有线索也会一并删除。")) return;
     try {
       const response = await fetch(`/api/admin/agents?id=${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("删除失败");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "删除失败");
       fetchData();
     } catch (err) {
       alert(err instanceof Error ? err.message : "删除失败");
