@@ -48,7 +48,7 @@ export default function AgentLoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">代理人登录</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">合伙人登录</h1>
           <p className="text-gray-600 text-sm">登录查看您的推广二维码和客户线索</p>
         </div>
 

@@ -28,7 +28,7 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">代理人入口</h2>
+                <h2 className="text-base font-semibold text-gray-900">合伙人入口</h2>
                 <p className="text-xs text-gray-500 mt-0.5">查看推广二维码和客户线索</p>
               </div>
             </div>
@@ -46,7 +46,7 @@ export default function Home() {
               </div>
               <div>
                 <h2 className="text-base font-semibold text-gray-900">管理后台</h2>
-                <p className="text-xs text-gray-500 mt-0.5">代理人管理与线索跟进</p>
+                <p className="text-xs text-gray-500 mt-0.5">合伙人管理与线索跟进</p>
               </div>
             </div>
           </Link>

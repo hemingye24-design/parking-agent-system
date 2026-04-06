@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// 公开接口：通过推广码获取代理人姓名（用于客户留资页面展示）
+// 公开接口：通过推广码获取合伙人姓名（用于客户留资页面展示）
 export async function GET(request: NextRequest) {
   try {
     const code = request.nextUrl.searchParams.get("code");
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!agent) {
-      return NextResponse.json({ error: "未找到代理人" }, { status: 404 });
+      return NextResponse.json({ error: "未找到合伙人" }, { status: 404 });
     }
 
     return NextResponse.json({ name: agent.name });

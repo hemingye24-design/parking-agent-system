@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const agent = await prisma.agent.findUnique({ where: { id: agentId } });
 
     if (!agent) {
-      return NextResponse.json({ error: "代理人不存在" }, { status: 404 });
+      return NextResponse.json({ error: "合伙人不存在" }, { status: 404 });
     }
 
     if (agent.password !== oldPassword) {

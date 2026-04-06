@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     if (!agent) {
       return NextResponse.json(
-        { error: "未找到该代理人，请联系管理员创建账户" },
+        { error: "未找到该合伙人，请联系管理员创建账户" },
         { status: 404 }
       );
     }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("代理人登录失败:", error);
+    console.error("合伙人登录失败:", error);
     return NextResponse.json(
       { error: "登录失败，请稍后重试" },
       { status: 500 }

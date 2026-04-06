@@ -20,9 +20,9 @@ export async function GET() {
 
     return NextResponse.json({ agents });
   } catch (error) {
-    console.error("获取代理商列表失败:", error);
+    console.error("获取合伙人列表失败:", error);
     return NextResponse.json(
-      { error: "获取代理商列表失败" },
+      { error: "获取合伙人列表失败" },
       { status: 500 }
     );
   }
@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, agent });
   } catch (error) {
-    console.error("创建代理商失败:", error);
+    console.error("创建合伙人失败:", error);
     return NextResponse.json(
-      { error: "创建代理商失败: " + (error instanceof Error ? error.message : String(error)) },
+      { error: "创建合伙人失败: " + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -86,7 +86,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { error: "缺少代理商 ID" },
+        { error: "缺少合伙人 ID" },
         { status: 400 }
       );
     }
@@ -97,9 +97,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("删除代理商失败:", error);
+    console.error("删除合伙人失败:", error);
     return NextResponse.json(
-      { error: "删除代理商失败" },
+      { error: "删除合伙人失败" },
       { status: 500 }
     );
   }

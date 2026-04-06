@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// 通过 accessToken 验证代理人身份（免登录）
+// 通过 accessToken 验证合伙人身份（免登录）
 export async function GET(request: NextRequest) {
   try {
     const token = request.nextUrl.searchParams.get("token");

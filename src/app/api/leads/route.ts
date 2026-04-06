@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 查找对应的代理商
+    // 查找对应的合伙人
     const agent = await prisma.agent.findUnique({
       where: { referralCode: agentCode },
     });

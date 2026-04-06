@@ -163,7 +163,7 @@ function AgentDashboardContent() {
       const qrY = 80;
       ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
 
-      // 代理人信息
+      // 合伙人信息
       ctx.fillStyle = "#374151";
       ctx.font = "16px sans-serif";
       ctx.textAlign = "center";

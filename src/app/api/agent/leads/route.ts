@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
 
     if (!agentId) {
       return NextResponse.json(
-        { error: "缺少代理商 ID" },
+        { error: "缺少合伙人 ID" },
         { status: 400 }
       );
     }
