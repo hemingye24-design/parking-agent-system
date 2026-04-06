@@ -58,9 +58,11 @@ export default function AdminDashboardPage() {
   const [newAgent, setNewAgent] = useState({
     name: "",
     phone: "",
-    referralCode: "",
   });
   const [copiedId, setCopiedId] = useState<string>("");
+  const [showPwdModal, setShowPwdModal] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwdError, setPwdError] = useState("");
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("admin");
@@ -104,9 +106,9 @@ export default function AdminDashboardPage() {
       if (!response.ok) throw new Error(data.error || "创建失败");
 
       setShowAddAgent(false);
-      setNewAgent({ name: "", phone: "", referralCode: "" });
+      setNewAgent({ name: "", phone: "" });
       fetchData();
-      alert("代理商创建成功！");
+      alert(`代理人创建成功！推广码：${data.agent.referralCode}，初始密码：123456`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "创建失败");
     }
@@ -151,6 +153,29 @@ export default function AdminDashboardPage() {
     setTimeout(() => setCopiedId(""), 2000);
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError("");
+    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+      setPwdError("两次输入的新密码不一致");
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword: pwdForm.oldPassword, newPassword: pwdForm.newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "修改失败");
+      alert("密码修改成功！");
+      setShowPwdModal(false);
+      setPwdForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      setPwdError(err instanceof Error ? err.message : "修改失败");
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("admin");
     router.push("/admin");
@@ -178,12 +203,20 @@ export default function AdminDashboardPage() {
               <h1 className="text-xl font-bold text-gray-900">管理后台</h1>
               <p className="text-gray-500 text-xs mt-1">厦门泊库智能科技有限公司</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-400 hover:text-gray-600"
-            >
-              退出
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPwdModal(true)}
+                className="text-sm text-blue-500 hover:text-blue-700"
+              >
+                改密码
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-gray-400 hover:text-gray-600"
+              >
+                退出
+              </button>
+            </div>
           </div>
 
           {/* 统计 */}
@@ -351,6 +384,55 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
+        {/* 修改密码弹窗 */}
+        {showPwdModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowPwdModal(false)}>
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">修改管理员密码</h2>
+              <form onSubmit={handleChangePassword} className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">原密码</label>
+                  <input
+                    type="password"
+                    required
+                    value={pwdForm.oldPassword}
+                    onChange={(e) => setPwdForm({ ...pwdForm, oldPassword: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                    placeholder="请输入原密码"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
+                  <input
+                    type="password"
+                    required
+                    value={pwdForm.newPassword}
+                    onChange={(e) => setPwdForm({ ...pwdForm, newPassword: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                    placeholder="请输入新密码"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
+                  <input
+                    type="password"
+                    required
+                    value={pwdForm.confirmPassword}
+                    onChange={(e) => setPwdForm({ ...pwdForm, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                    placeholder="再次输入新密码"
+                  />
+                </div>
+                {pwdError && <div className="bg-red-50 text-red-600 p-2 rounded-lg text-xs">{pwdError}</div>}
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowPwdModal(false)} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700">取消</button>
+                  <button type="submit" className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium">确认修改</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* 添加代理商弹窗 */}
         {showAddAgent && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -383,17 +465,7 @@ export default function AdminDashboardPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">推广码 *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newAgent.referralCode}
-                    onChange={(e) => setNewAgent({ ...newAgent, referralCode: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="如 A1001"
-                  />
-                </div>
+                <p className="text-xs text-gray-400">推广码将自动生成（BK0001格式），初始密码为 123456</p>
 
                 <div className="flex gap-3 pt-2">
                   <button

@@ -4,11 +4,11 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, phone } = body;
+    const { phone, password } = body;
 
-    if (!name || !phone) {
+    if (!phone || !password) {
       return NextResponse.json(
-        { error: "请输入姓名和手机号" },
+        { error: "请输入手机号和密码" },
         { status: 400 }
       );
     }
@@ -19,20 +19,18 @@ export async function POST(request: NextRequest) {
 
     if (!agent) {
       return NextResponse.json(
-        { error: "未找到该代理商，请联系管理员创建账户" },
+        { error: "未找到该代理人，请联系管理员创建账户" },
         { status: 404 }
       );
     }
 
-    // 忽略姓名的编码问题，只验证手机号
-    // if (agent.name !== name) {
-    //   return NextResponse.json(
-    //     { error: "姓名与手机号不匹配" },
-    //     { status: 401 }
-    //   );
-    // }
+    if (agent.password !== password) {
+      return NextResponse.json(
+        { error: "密码错误" },
+        { status: 401 }
+      );
+    }
 
-    // 返回代理商信息（不包含敏感数据）
     return NextResponse.json({
       success: true,
       agent: {
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("代理商登录失败:", error);
+    console.error("代理人登录失败:", error);
     return NextResponse.json(
       { error: "登录失败，请稍后重试" },
       { status: 500 }

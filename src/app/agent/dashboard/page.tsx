@@ -52,6 +52,9 @@ function AgentDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [qrcode, setQrcode] = useState<string>("");
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showPwdModal, setShowPwdModal] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwdError, setPwdError] = useState("");
   const [copied, setCopied] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -192,6 +195,29 @@ function AgentDashboardContent() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError("");
+    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+      setPwdError("两次输入的新密码不一致");
+      return;
+    }
+    try {
+      const res = await fetch("/api/agent/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId: agent!.id, oldPassword: pwdForm.oldPassword, newPassword: pwdForm.newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "修改失败");
+      alert("密码修改成功！");
+      setShowPwdModal(false);
+      setPwdForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      setPwdError(err instanceof Error ? err.message : "修改失败");
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("agent");
     localStorage.removeItem("agentToken");
@@ -226,12 +252,20 @@ function AgentDashboardContent() {
                 推广码：<span className="font-mono font-semibold text-blue-600">{agent.referralCode}</span>
               </p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-400 hover:text-gray-600"
-            >
-              退出
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPwdModal(true)}
+                className="text-sm text-blue-500 hover:text-blue-700"
+              >
+                改密码
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-gray-400 hover:text-gray-600"
+              >
+                退出
+              </button>
+            </div>
           </div>
 
           {/* 统计卡片 */}
@@ -347,6 +381,61 @@ function AgentDashboardContent() {
             </div>
           )}
         </div>
+
+        {/* 修改密码弹窗 */}
+        {showPwdModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={() => setShowPwdModal(false)}>
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">修改密码</h3>
+              <form onSubmit={handleChangePassword} className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">原密码</label>
+                  <input
+                    type="password"
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pwdForm.oldPassword}
+                    onChange={(e) => setPwdForm({ ...pwdForm, oldPassword: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                    placeholder="请输入原密码"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
+                  <input
+                    type="password"
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pwdForm.newPassword}
+                    onChange={(e) => setPwdForm({ ...pwdForm, newPassword: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                    placeholder="6位数字密码"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
+                  <input
+                    type="password"
+                    required
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pwdForm.confirmPassword}
+                    onChange={(e) => setPwdForm({ ...pwdForm, confirmPassword: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                    placeholder="再次输入新密码"
+                  />
+                </div>
+                {pwdError && <div className="bg-red-50 text-red-600 p-2 rounded-lg text-xs">{pwdError}</div>}
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowPwdModal(false)} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700">取消</button>
+                  <button type="submit" className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium">确认修改</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* 二维码大图弹窗 */}
         {showQrModal && (

@@ -16,6 +16,7 @@ model Agent {
   phone         String   @unique
   referralCode  String   @unique
   accessToken   String   @unique @default(uuid())
+  password      String   @default("123456")
   createdAt     DateTime @default(now())
   leads         Lead[]
 }

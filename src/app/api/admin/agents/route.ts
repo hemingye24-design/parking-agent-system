@@ -31,11 +31,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, phone, referralCode } = body;
+    const { name, phone } = body;
 
-    if (!name || !phone || !referralCode) {
+    if (!name || !phone) {
       return NextResponse.json(
-        { error: "请填写所有必填字段" },
+        { error: "请填写姓名和手机号" },
         { status: 400 }
       );
     }
@@ -52,17 +52,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 检查推广码是否已存在
-    const existingCode = await prisma.agent.findUnique({
-      where: { referralCode },
+    // 自动生成推广码：BK0001, BK0002, ...
+    const lastAgent = await prisma.agent.findFirst({
+      where: { referralCode: { startsWith: "BK" } },
+      orderBy: { referralCode: "desc" },
     });
 
-    if (existingCode) {
-      return NextResponse.json(
-        { error: "该推广码已被使用" },
-        { status: 400 }
-      );
+    let nextNum = 1;
+    if (lastAgent) {
+      const num = parseInt(lastAgent.referralCode.replace("BK", ""), 10);
+      if (!isNaN(num)) nextNum = num + 1;
     }
+    const referralCode = `BK${String(nextNum).padStart(4, "0")}`;
 
     const agent = await prisma.agent.create({
       data: { name, phone, referralCode },
