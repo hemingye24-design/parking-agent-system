@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import provinceCityData from "@/lib/province-city.json";
+
+const provinces = Object.keys(provinceCityData);
 
 export default function InvitePage() {
   const params = useParams();
@@ -11,7 +14,8 @@ export default function InvitePage() {
     customerName: "",
     customerPhone: "",
     projectTypes: [] as string[],
-    projectLocation: "",
+    province: "",
+    city: "",
     parkingGap: "",
   });
   const [loading, setLoading] = useState(false);
@@ -19,8 +23,11 @@ export default function InvitePage() {
   const [success, setSuccess] = useState(false);
   const [agentName, setAgentName] = useState("");
 
+  const cities = formData.province
+    ? (provinceCityData as Record<string, string[]>)[formData.province] || []
+    : [];
+
   useEffect(() => {
-    // 获取代理人名称用于展示
     fetch(`/api/agent/info?code=${agentCode}`)
       .then((r) => r.json())
       .then((d) => { if (d.name) setAgentName(d.name); })
@@ -32,6 +39,10 @@ export default function InvitePage() {
     setLoading(true);
     setError("");
 
+    const projectLocation = formData.city
+      ? `${formData.province} ${formData.city}`
+      : formData.province;
+
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
@@ -40,18 +51,14 @@ export default function InvitePage() {
           customerName: formData.customerName,
           customerPhone: formData.customerPhone,
           projectTypes: formData.projectTypes.join(","),
-          projectLocation: formData.projectLocation,
+          projectLocation,
           parkingGap: formData.parkingGap,
           agentCode,
         }),
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "提交失败");
-      }
-
+      if (!response.ok) throw new Error(data.error || "提交失败");
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "提交失败，请稍后重试");
@@ -88,16 +95,10 @@ export default function InvitePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-1">
-            泊库云街
-          </h1>
-          <p className="text-gray-500 text-xs">
-            城市停车空间方案提供商 · 专注二层立体车库
-          </p>
+          <h1 className="text-xl font-bold text-gray-900 mb-1">泊库云街</h1>
+          <p className="text-gray-500 text-xs">城市停车空间方案提供商 · 专注二层立体车库</p>
           {agentName && (
-            <p className="text-blue-600 text-xs mt-2">
-              {agentName} 为您推荐
-            </p>
+            <p className="text-blue-600 text-xs mt-2">{agentName} 为您推荐</p>
           )}
         </div>
 
@@ -172,30 +173,34 @@ export default function InvitePage() {
             </div>
 
             <div>
-              <label htmlFor="projectLocation" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 项目所在地 *
               </label>
-              <select
-                id="projectLocation"
-                required
-                value={formData.projectLocation}
-                onChange={(e) => setFormData({ ...formData, projectLocation: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              >
-                <option value="">请选择省/市</option>
-                {[
-                  "北京市", "天津市", "河北省", "山西省", "内蒙古自治区",
-                  "辽宁省", "吉林省", "黑龙江省", "上海市", "江苏省",
-                  "浙江省", "安徽省", "福建省", "江西省", "山东省",
-                  "河南省", "湖北省", "湖南省", "广东省", "广西壮族自治区",
-                  "海南省", "重庆市", "四川省", "贵州省", "云南省",
-                  "西藏自治区", "陕西省", "甘肃省", "青海省",
-                  "宁夏回族自治区", "新疆维吾尔自治区",
-                  "香港特别行政区", "澳门特别行政区", "台湾省",
-                ].map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  required
+                  value={formData.province}
+                  onChange={(e) => setFormData({ ...formData, province: e.target.value, city: "" })}
+                  className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  <option value="">选择省份</option>
+                  {provinces.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+                <select
+                  required
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  disabled={!formData.province}
+                >
+                  <option value="">选择城市</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
@@ -216,9 +221,7 @@ export default function InvitePage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
-                {error}
-              </div>
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>
             )}
 
             <button

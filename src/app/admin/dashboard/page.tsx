@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LeadStatus } from "@prisma/client";
+import QRCode from "qrcode";
 
 interface Agent {
   id: string;
@@ -60,6 +61,8 @@ export default function AdminDashboardPage() {
     phone: "",
   });
   const [copiedId, setCopiedId] = useState<string>("");
+  const [showLoginQr, setShowLoginQr] = useState(false);
+  const [loginQrUrl, setLoginQrUrl] = useState("");
   const [showPwdModal, setShowPwdModal] = useState(false);
   const [pwdForm, setPwdForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [pwdError, setPwdError] = useState("");
@@ -153,6 +156,17 @@ export default function AdminDashboardPage() {
     setTimeout(() => setCopiedId(""), 2000);
   };
 
+  const showAgentLoginQr = async () => {
+    const link = `${window.location.origin}/agent`;
+    try {
+      const url = await QRCode.toDataURL(link, { width: 300, margin: 2 });
+      setLoginQrUrl(url);
+      setShowLoginQr(true);
+    } catch (err) {
+      console.error("生成二维码失败:", err);
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwdError("");
@@ -204,6 +218,12 @@ export default function AdminDashboardPage() {
               <p className="text-gray-500 text-xs mt-1">厦门泊库智能科技有限公司</p>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={showAgentLoginQr}
+                className="text-sm text-green-600 hover:text-green-800"
+              >
+                代理人登录码
+              </button>
               <button
                 onClick={() => setShowPwdModal(true)}
                 className="text-sm text-blue-500 hover:text-blue-700"
@@ -383,6 +403,26 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </div>
+
+        {/* 代理人登录二维码弹窗 */}
+        {showLoginQr && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowLoginQr(false)}>
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">代理人登录二维码</h2>
+              <p className="text-xs text-gray-500 mb-4">代理人扫码即可进入登录页面</p>
+              {loginQrUrl && (
+                <img src={loginQrUrl} alt="代理人登录二维码" className="w-56 h-56 mx-auto rounded-lg" />
+              )}
+              <p className="text-xs text-gray-400 mt-3 mb-4">可截图放入代理人海报中</p>
+              <button
+                onClick={() => setShowLoginQr(false)}
+                className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 修改密码弹窗 */}
         {showPwdModal && (
