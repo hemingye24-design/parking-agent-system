@@ -6,7 +6,7 @@ async function main() {
   // 使用 fetch API 直接调用后端接口创建数据
   const baseUrl = "http://localhost:3000";
 
-  // 创建代理商
+  // 创建合伙人
   const agent1 = await fetch(`${baseUrl}/api/admin/agents`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -27,7 +27,7 @@ async function main() {
     }),
   }).then((res) => res.json());
 
-  console.log("已创建代理商:", agent1.agent?.name, agent2.agent?.name);
+  console.log("已创建合伙人:", agent1.agent?.name, agent2.agent?.name);
   console.log("种子数据创建完成！请启动开发服务器后运行此脚本。");
 }
 

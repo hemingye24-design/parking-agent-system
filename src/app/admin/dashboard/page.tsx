@@ -111,14 +111,14 @@ export default function AdminDashboardPage() {
       setShowAddAgent(false);
       setNewAgent({ name: "", phone: "" });
       fetchData();
-      alert(`代理人创建成功！推广码：${data.agent.referralCode}，初始密码：123456`);
+      alert(`合伙人创建成功！推广码：${data.agent.referralCode}，初始密码：123456`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "创建失败");
     }
   };
 
   const handleDeleteAgent = async (id: string) => {
-    if (!confirm("确定要删除该代理商吗？")) return;
+    if (!confirm("确定要删除该合伙人吗？")) return;
     try {
       const response = await fetch(`/api/admin/agents?id=${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("删除失败");
@@ -222,7 +222,7 @@ export default function AdminDashboardPage() {
                 onClick={showAgentLoginQr}
                 className="text-sm text-green-600 hover:text-green-800"
               >
-                代理人登录码
+                合伙人登录码
               </button>
               <button
                 onClick={() => setShowPwdModal(true)}
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-4 gap-3 mt-4">
             <div className="bg-purple-50 rounded-xl p-3 text-center">
               <div className="text-xl font-bold text-purple-600">{agents.length}</div>
-              <div className="text-xs text-purple-500 mt-1">代理人</div>
+              <div className="text-xs text-purple-500 mt-1">合伙人</div>
             </div>
             <div className="bg-blue-50 rounded-xl p-3 text-center">
               <div className="text-xl font-bold text-blue-600">{totalLeads}</div>
@@ -271,7 +271,7 @@ export default function AdminDashboardPage() {
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              代理人 ({agents.length})
+              合伙人 ({agents.length})
             </button>
             <button
               onClick={() => setActiveTab("leads")}
@@ -285,11 +285,11 @@ export default function AdminDashboardPage() {
             </button>
           </div>
 
-          {/* 代理商管理 */}
+          {/* 合伙人管理 */}
           {activeTab === "agents" && (
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-base font-semibold text-gray-900">代理人列表</h2>
+                <h2 className="text-base font-semibold text-gray-900">合伙人列表</h2>
                 <button
                   onClick={() => setShowAddAgent(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
               </div>
 
               {agents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 text-sm">暂无代理人</div>
+                <div className="text-center py-8 text-gray-500 text-sm">暂无合伙人</div>
               ) : (
                 <div className="space-y-3">
                   {agents.map((agent) => (
@@ -353,7 +353,7 @@ export default function AdminDashboardPage() {
                         </button>
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
-                        将「看板链接」发给代理人，他在微信中打开即可免登录查看线索
+                        将「看板链接」发给合伙人，他在微信中打开即可免登录查看线索
                       </p>
                     </div>
                   ))}
@@ -392,7 +392,7 @@ export default function AdminDashboardPage() {
                         <p>项目：{lead.projectTypes} · {lead.projectLocation}</p>
                         <p>车位需求：{lead.parkingGap} 个</p>
                         <p className="text-gray-400">
-                          代理：{lead.agent.name}（{lead.agent.referralCode}）·{" "}
+                          合伙：{lead.agent.name}（{lead.agent.referralCode}）·{" "}
                           {new Date(lead.createdAt).toLocaleString("zh-CN")}
                         </p>
                       </div>
@@ -404,16 +404,16 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        {/* 代理人登录二维码弹窗 */}
+        {/* 合伙人登录二维码弹窗 */}
         {showLoginQr && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowLoginQr(false)}>
             <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">代理人登录二维码</h2>
-              <p className="text-xs text-gray-500 mb-4">代理人扫码即可进入登录页面</p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">合伙人登录二维码</h2>
+              <p className="text-xs text-gray-500 mb-4">合伙人扫码即可进入登录页面</p>
               {loginQrUrl && (
-                <img src={loginQrUrl} alt="代理人登录二维码" className="w-56 h-56 mx-auto rounded-lg" />
+                <img src={loginQrUrl} alt="合伙人登录二维码" className="w-56 h-56 mx-auto rounded-lg" />
               )}
-              <p className="text-xs text-gray-400 mt-3 mb-4">可截图放入代理人海报中</p>
+              <p className="text-xs text-gray-400 mt-3 mb-4">可截图放入合伙人海报中</p>
               <button
                 onClick={() => setShowLoginQr(false)}
                 className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200"
@@ -473,11 +473,11 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* 添加代理商弹窗 */}
+        {/* 添加合伙人弹窗 */}
         {showAddAgent && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">添加代理人</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">添加合伙人</h2>
 
               <form onSubmit={handleAddAgent} className="space-y-3">
                 <div>
