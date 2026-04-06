@@ -91,6 +91,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // 先删除关联的线索，再删除合伙人
+    await prisma.lead.deleteMany({
+      where: { agentId: id },
+    });
     await prisma.agent.delete({
       where: { id },
     });

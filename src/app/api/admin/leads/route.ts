@@ -26,6 +26,32 @@ export async function GET() {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "缺少线索 ID" },
+        { status: 400 }
+      );
+    }
+
+    await prisma.lead.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("删除线索失败:", error);
+    return NextResponse.json(
+      { error: "删除线索失败" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();

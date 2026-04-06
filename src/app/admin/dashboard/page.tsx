@@ -128,6 +128,17 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleDeleteLead = async (id: string) => {
+    if (!confirm("确定要删除该线索吗？删除后合伙人端也将同步消失。")) return;
+    try {
+      const response = await fetch(`/api/admin/leads?id=${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("删除失败");
+      fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "删除失败");
+    }
+  };
+
   const handleUpdateLeadStatus = async (leadId: string, status: LeadStatus) => {
     try {
       const response = await fetch("/api/admin/leads", {
@@ -378,15 +389,23 @@ export default function AdminDashboardPage() {
                           <span className="font-semibold text-gray-900 text-sm">{lead.customerName}</span>
                           <span className="text-xs text-gray-400 ml-2">{lead.customerPhone}</span>
                         </div>
-                        <select
-                          value={lead.status}
-                          onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value as LeadStatus)}
-                          className={`text-xs px-2 py-1 rounded-lg border-0 font-medium ${statusColors[lead.status]}`}
-                        >
-                          {Object.entries(statusLabels).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={lead.status}
+                            onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value as LeadStatus)}
+                            className={`text-xs px-2 py-1 rounded-lg border-0 font-medium ${statusColors[lead.status]}`}
+                          >
+                            {Object.entries(statusLabels).map(([value, label]) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => handleDeleteLead(lead.id)}
+                            className="text-xs text-red-400 hover:text-red-600"
+                          >
+                            删除
+                          </button>
+                        </div>
                       </div>
                       <div className="text-xs text-gray-500 space-y-0.5">
                         <p>项目：{lead.projectTypes} · {lead.projectLocation}</p>
